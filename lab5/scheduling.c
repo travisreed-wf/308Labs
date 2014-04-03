@@ -56,13 +56,17 @@ int main()
         break;
       }
     }
+    int remainingtime = (rand()%30)+10;
     proc[j].arrivaltime = arrivaltime;
-    proc[j].runtime = (rand()%30)+10;
+    proc[j].runtime = remainingtime;
     proc[j].priority = rand()%3;
     proc[j].starttime = 0;
     proc[j].endtime = 0;
     proc[j].flag = 0;
-    proc[j].remainingtime = proc[j].runtime;
+    proc[j].remainingtime = remainingtime;
+  }
+  for (int i=0;i<NUM_PROCESSES;i++){
+    printf("%d REmaining %d\n", i, proc[i].remainingtime);
   }
 
   /* Show process values */
@@ -86,7 +90,11 @@ int main()
 
   printf("\n\nRound Robin with priority\n");
   memcpy(proc_copy, proc, NUM_PROCESSES * sizeof(struct process));
+  for (int i=0;i<NUM_PROCESSES;i++){
+    printf("%d REmaining %d\n", i, proc_copy[i].remainingtime);
+  }
   round_robin_priority(proc_copy);
+
 
   return 0;
 }
@@ -96,7 +104,7 @@ void first_come_first_served(struct process *proc)
   int starttime = 1;
   int endtime = 1;
   int total_time = 0;
-  for (int i=1;i<NUM_PROCESSES;i++){
+  for (int i=0;i<NUM_PROCESSES;i++){
     endtime = starttime + proc[i].runtime;
     total_time += endtime - proc[i].arrivaltime;
     printf("Process %d started at time %d\n", i, starttime);
@@ -187,12 +195,15 @@ void round_robin(struct process *proc)
   for (int i=0;i<NUM_PROCESSES;i++){
     total_time += proc[i].endtime - proc[i].arrivaltime;
   }
-  printf("Average time from arrival to finish is %d seconds", (int) total_time/NUM_PROCESSES);
+  printf("Average time from arrival to finish is %d seconds\n", (int) total_time/NUM_PROCESSES);
 
 }
 
 void round_robin_priority(struct process *proc)
 {
+  for (int i=0;i<NUM_PROCESSES;i++){
+    printf("%d REmaining %d\n", i, proc[i].remainingtime);
+  }
   int starttime = 0;
   int endtime = 0;
   int total_time = 0;
@@ -201,19 +212,41 @@ void round_robin_priority(struct process *proc)
   int considered_processes = 0;
   int completed_count = 0;
   int current_process_by_priority[3] = {-1,-1,-1};
+  for (int i=0;i<NUM_PROCESSES;i++){
+    if (proc[i].priority == 0){
+      current_process_by_priority[0] = i;
+      break;
+    }
+  }
+  for (int i=0;i<NUM_PROCESSES;i++){
+    if (proc[i].priority == 1){
+      current_process_by_priority[1] = i;
+      break;
+    }
+  }
+  for (int i=0;i<NUM_PROCESSES;i++){
+    if (proc[i].priority == 2){
+      current_process_by_priority[2] = i;
+      break;
+    }
+  }
   while (completed_count < NUM_PROCESSES){
     while (proc[considered_processes].arrivaltime <= current_second && considered_processes < NUM_PROCESSES){
       considered_processes++;
     }
     for (int i=0;i<considered_processes;i++){
-      if (proc[i].priority > highest_priority){
+      if (proc[i].priority > highest_priority && proc[i].remainingtime != 0){
         highest_priority = proc[i].priority;
       }
     }
+    printf("Highest priority: %d, Process with highest %d, second %d\n", highest_priority, current_process_by_priority[highest_priority], current_second);
     while (1){
       //find the next process with highest priority
       int current_process = current_process_by_priority[highest_priority];
+      printf("current_process %d\n", current_process);
+      sleep(1);
       if (proc[current_process].priority == highest_priority && proc[current_process].remainingtime != 0){
+        printf("HERE\n");
         if (proc[current_process].flag == 0){
           printf("Process %d started at time %d\n", current_process, current_second);
         }
@@ -234,6 +267,11 @@ void round_robin_priority(struct process *proc)
       }
     }
   }
+  printf("END");
+  for (int i=0;i<NUM_PROCESSES;i++){
+    total_time += proc[i].endtime - proc[i].arrivaltime;
+  }
+  printf("Average time from arrival to finish is %d seconds", (int) total_time/NUM_PROCESSES);
 }
 
 
